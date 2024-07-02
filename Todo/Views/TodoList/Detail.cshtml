@@ -23,12 +23,25 @@
             <option value="title">Title</option>
         </select>
     </div>
+    <h2>CREATE NEW ITEM BELOW</h2>
+    <form id="addItemForm" class="mb-3">
+        <div class="form-group">
+            <input type="text" class="form-control" id="newItemTitle" placeholder="New item title" required>
+        </div>
+        <div class="form-group">
+            <select class="form-control" id="newItemImportance">
+                <option value="0">Low</option>
+                <option value="1">Medium</option>
+                <option value="2">High</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="newItemRank">Rank:</label>
+            <input type="number" class="form-control" id="newItemRank" placeholder="Rank" required min="1">
+        </div>
+        <button type="submit" class="btn btn-primary">Add Item</button>
+    </form>
     <ul class="list-group" id="todoItems">
-        <li class="list-group-item">
-            <a asp-action="Create" asp-controller="TodoItem" asp-route-todoListId="@Model.TodoListId">
-                <strong>Add New Item</strong>
-            </a>
-        </li>
         @foreach (var item in sortedItems)
         {
             string contextualClass;
@@ -60,27 +73,25 @@
                     </div>
                     @{
                         var gravatarprofile = await _gravatarService.GetProfileDetailsAsync(item.ResponsibleParty.Email);
-
                     }
-                    @if(gravatarprofile!=null)
+                    @if (gravatarprofile != null)
                     {
-                    <div class="col-md-4 text-right">
-                        <small>
-                            @gravatarprofile.display_name <br />
-                            <img src="https://www.gravatar.com/avatar/@Gravatar.GetHash(item.ResponsibleParty.Email)?s=30" />
-                        </small>
-                    </div>
+                        <div class="col-md-4 text-right">
+                            <small>
+                                @gravatarprofile.display_name <br />
+                                <img src="https://www.gravatar.com/avatar/@Gravatar.GetHash(item.ResponsibleParty.Email)?s=30" />
+                            </small>
+                        </div>
                     }
                     else
                     {
-                    <div class="col-md-4 text-right">
-                        <small>
-                            @item.ResponsibleParty.UserName
-                            <img src="https://www.gravatar.com/avatar/@Gravatar.GetHash(item.ResponsibleParty.Email)?s=30" />
-                        </small>
-                    </div>
+                        <div class="col-md-4 text-right">
+                            <small>
+                                @item.ResponsibleParty.UserName
+                                <img src="https://www.gravatar.com/avatar/@Gravatar.GetHash(item.ResponsibleParty.Email)?s=30" />
+                            </small>
+                        </div>
                     }
-
                 </div>
             </li>
         }
@@ -92,7 +103,8 @@
             const hideCompleted = document.getElementById('hideCompleted');
             const sortOrder = document.getElementById('sortOrder');
             const todoItemsList = document.getElementById('todoItems');
-            const todoItems = Array.from(todoItemsList.querySelectorAll('.list-group-item:not(:first-child)'));
+            const addItemForm = document.getElementById('addItemForm');
+            let todoItems = Array.from(todoItemsList.querySelectorAll('.list-group-item'));
 
             function updateList() {
                 todoItems.sort((a, b) => {
@@ -121,6 +133,72 @@
 
             hideCompleted.addEventListener('change', updateList);
             sortOrder.addEventListener('change', updateList);
+
+            addItemForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const title = document.getElementById('newItemTitle').value;
+                const importance = document.getElementById('newItemImportance').value;
+                const rank = document.getElementById('newItemRank').value;
+
+                const response = await fetch('/api/TodoItem/Create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        title: title,
+                        importance: parseInt(importance),
+                        rank: rank,
+                        todoListId: @Model.TodoListId
+                            }),
+                });
+
+                if (response.ok) {
+                    const newItem = await response.json();
+                    const listItem = createListItem(newItem);
+                    todoItemsList.insertBefore(listItem, todoItemsList.firstChild);
+                    todoItems = Array.from(todoItemsList.querySelectorAll('.list-group-item'));
+                    updateList();
+                    addItemForm.reset();
+                } else {
+                    console.error('Failed to add item');
+                }
+            });
+
+            function createListItem(item) {
+                const li = document.createElement('li');
+                li.className = `list-group-item ${getContextualClass(item.importance)}`;
+                li.dataset.Rank = item.Rank;
+                li.dataset.title = item.title;
+                li.dataset.importance = item.importance;
+
+                const content = `
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <a href="/TodoItem/Edit/${item.todoItemId}">
+                                        ${item.title}
+                                    </a>
+                                </div>
+                                <div class="col-md-4 text-right">
+                                    <small>
+                                        ${item.responsibleParty.userName}
+                                        <img src="https://www.gravatar.com/avatar/${item.responsibleParty.email}?s=30" />
+                                    </small>
+                                </div>
+                            </div>
+                        `;
+
+                li.innerHTML = content;
+                return li;
+            }
+
+            function getContextualClass(importance) {
+                switch (parseInt(importance)) {
+                    case 2: return 'list-group-item-danger';
+                    case 0: return 'list-group-item-info';
+                    default: return '';
+                }
+            }
 
             updateList();
         })();
