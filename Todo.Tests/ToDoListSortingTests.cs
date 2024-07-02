@@ -9,9 +9,9 @@ namespace Todo.Tests
 {
     public class TodoListSortingTests
     {
-        private TodoItemSummaryViewmodel CreateTodoItemSummaryViewmodel(int todoItemId, string title, bool isDone, UserSummaryViewmodel responsibleParty, Importance importance)
+        private TodoItemSummaryViewmodel CreateTodoItemSummaryViewmodel(int todoItemId, string title, bool isDone, UserSummaryViewmodel responsibleParty, Importance importance, int rank)
         {
-            return new TodoItemSummaryViewmodel(todoItemId, title, isDone, responsibleParty, importance);
+            return new TodoItemSummaryViewmodel(todoItemId, title, isDone, responsibleParty, importance, rank);
         }
 
         [Fact]
@@ -20,9 +20,9 @@ namespace Todo.Tests
             var responsibleParty = new UserSummaryViewmodel("user1","mike@aol.com");
             var items = new List<TodoItemSummaryViewmodel>
             {
-                CreateTodoItemSummaryViewmodel(1, "Low Importance Task", false, responsibleParty, Importance.Low),
-                CreateTodoItemSummaryViewmodel(2, "High Importance Task", false, responsibleParty, Importance.High),
-                CreateTodoItemSummaryViewmodel(3, "Medium Importance Task", false, responsibleParty, Importance.Medium)
+                CreateTodoItemSummaryViewmodel(1, "Low Importance Task", false, responsibleParty, Importance.Low, 4),
+                CreateTodoItemSummaryViewmodel(2, "High Importance Task", false, responsibleParty, Importance.High, 88),
+                CreateTodoItemSummaryViewmodel(3, "Medium Importance Task", false, responsibleParty, Importance.Medium, 69)
             };
 
             var viewModel = new TodoListDetailViewmodel(1, "Test List", items);

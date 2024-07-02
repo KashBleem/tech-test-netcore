@@ -2,16 +2,11 @@
 @using Todo.Data.Entities
 @using Todo.Services
 @model Todo.Models.TodoLists.TodoListDetailViewmodel
-
 @{
     ViewData["Title"] = $"List: {Model.Title}";
-
-    //Item sorting by Importance enum. Would prefer this to be in EF.
     var sortedItems = Model.Items.OrderBy(item => item.Importance).ToList();
 }
-
 <h2>@ViewData["Title"]</h2>
-
 <div class="col-md-6">
     <div class="form-check mb-3">
         <input class="form-check-input" type="checkbox" id="hideCompleted">
@@ -19,13 +14,20 @@
             Hide completed items
         </label>
     </div>
-    <ul class="list-group">
+    <div class="form-group mb-3">
+        <label for="sortOrder">Sort by:</label>
+        <select class="form-control" id="sortOrder">
+            <option value="importance">Importance</option>
+            <option value="rank">Rank</option>
+            <option value="title">Title</option>
+        </select>
+    </div>
+    <ul class="list-group" id="todoItems">
         <li class="list-group-item">
             <a asp-action="Create" asp-controller="TodoItem" asp-route-todoListId="@Model.TodoListId">
                 <strong>Add New Item</strong>
             </a>
         </li>
-
         @foreach (var item in sortedItems)
         {
             string contextualClass;
@@ -41,8 +43,7 @@
                     contextualClass = "";
                     break;
             }
-
-            <li class="list-group-item @contextualClass">
+            <li class="list-group-item @contextualClass" data-rank="@item.Rank" data-title="@item.Title" data-importance="@((int)item.Importance)">
                 <div class="row">
                     <div class="col-md-8">
                         <a asp-action="Edit" asp-controller="TodoItem" asp-route-todoItemId="@item.TodoItemId">
@@ -67,21 +68,36 @@
         }
     </ul>
 </div>
-
 @section Scripts {
     <script>
-        (function() {
+        (function () {
             const hideCompleted = document.getElementById('hideCompleted');
-            const todoItems = document.querySelectorAll('.list-group-item:not(:first-child)');
+            const sortOrder = document.getElementById('sortOrder');
+            const todoItemsList = document.getElementById('todoItems');
+            const todoItems = Array.from(todoItemsList.querySelectorAll('.list-group-item:not(:first-child)'));
 
-            hideCompleted.addEventListener('change', function () {
+            function updateList() {
+                todoItems.sort((a, b) => {
+                    const sortBy = sortOrder.value;
+                    const aValue = a.dataset[sortBy];
+                    const bValue = b.dataset[sortBy];
+                    return sortBy === 'title' ? aValue.localeCompare(bValue) : parseInt(aValue) - parseInt(bValue);
+                });
+
+                todoItems.forEach(item => item.remove());
                 todoItems.forEach(item => {
                     const titleElement = item.querySelector('a');
-                    if (titleElement && titleElement.querySelector('s')) {
-                        item.style.display = this.checked ? 'none' : '';
+                    const isCompleted = titleElement && titleElement.querySelector('s');
+                    if (!hideCompleted.checked || !isCompleted) {
+                        todoItemsList.appendChild(item);
                     }
                 });
-            });
+            }
+
+            hideCompleted.addEventListener('change', updateList);
+            sortOrder.addEventListener('change', updateList);
+            
+            updateList();
         })();
     </script>
 }
