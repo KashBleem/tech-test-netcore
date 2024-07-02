@@ -30,7 +30,6 @@ namespace Todo
                 {
                     var userManager = services.GetRequiredService<UserManager<IdentityUser>>();
 
-                    // Create specific user
                     var specificUser = new IdentityUser { UserName = "kash.bleem@gmail.com", Email = "kash.bleem@gmail.com" };
                     var result = userManager.CreateAsync(specificUser, "Password123!").Result;
 
@@ -40,7 +39,6 @@ namespace Todo
                         logger.LogWarning("User creation failed: {0}", string.Join(", ", result.Errors.Select(e => e.Description)));
                     }
 
-                    // Create random users
                     for (int i = 1; i <= 4; i++)
                     {
                         var randomUserName = $"randomuser{i}@example.com";

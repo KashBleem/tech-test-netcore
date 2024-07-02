@@ -13,6 +13,12 @@
 <h2>@ViewData["Title"]</h2>
 
 <div class="col-md-6">
+    <div class="form-check mb-3">
+        <input class="form-check-input" type="checkbox" id="hideCompleted">
+        <label class="form-check-label" for="hideCompleted">
+            Hide completed items
+        </label>
+    </div>
     <ul class="list-group">
         <li class="list-group-item">
             <a asp-action="Create" asp-controller="TodoItem" asp-route-todoListId="@Model.TodoListId">
@@ -60,12 +66,6 @@
             </li>
         }
     </ul>
-    <div class="form-check mb-3">
-        <input class="form-check-input" type="checkbox" id="hideCompleted">
-        <label class="form-check-label" for="hideCompleted">
-            Hide completed items
-        </label>
-    </div>
 </div>
 
 @section Scripts {
