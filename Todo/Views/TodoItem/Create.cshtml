@@ -8,7 +8,6 @@
     ViewData["Title"] = $"New Item in {Model.TodoListTitle}";
 }
 
-
 @inject ApplicationDbContext dbContext
 
 <h2>@ViewData["Title"]</h2>
@@ -27,27 +26,25 @@
                 <span asp-validation-for="Title" class="text-danger"></span>
             </div>
 
-
             <div class="form-group">
                 <label asp-for="Importance"></label>
                 @Html.DropDownListFor(
-                    m => m.Importance,
-                    SelectListConvenience.ImportanceSelectListItems,
-                    new {@class="form-control"}
-                    )
+                         m => m.Importance,
+                         SelectListConvenience.ImportanceSelectListItems,
+                         new { @class = "form-control" }
+                         )
                 <span asp-validation-for="Importance" class="text-danger"></span>
             </div>
 
             <div class="form-group">
-                <label asp-for="ResponsibleParty" class="control-label">Responsible Party</label>
+                <label asp-for="ResponsiblePartyId" class="control-label">Responsible Party</label>
                 @Html.DropDownListFor(
-                         m => m.ResponsibleParty.UserName,
-                         dbContext.UserSelectListItems(),
+                         m => m.ResponsiblePartyId,
+                         new SelectList(dbContext.Users.Select(u => new { u.Id, u.UserName }), "Id", "UserName"),
                          new { @class = "form-control" }
                          )
-                <span asp-validation-for="ResponsibleParty" class="text-danger"></span>
+                <span asp-validation-for="ResponsiblePartyId" class="text-danger"></span>
             </div>
-
 
             <div class="form-group">
                 <button type="submit" class="btn btn-default">Save</button>
