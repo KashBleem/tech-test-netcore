@@ -48,13 +48,13 @@
 
 
             <div class="form-group">
-                <label asp-for="ResponsiblePartyId"></label>
+                <label asp-for="ResponsibleParty" class="control-label">Responsible Party</label>
                 @Html.DropDownListFor(
-                    m => m.ResponsiblePartyId,
-                    dbContext.UserSelectListItems(),
-                    new {@class="form-control"}
-                    )
-                <span asp-validation-for="ResponsiblePartyId" class="text-danger"></span>
+                         m => m.ResponsibleParty.UserName,
+                         dbContext.UserSelectListItems(),
+                         new { @class = "form-control" }
+                         )
+                <span asp-validation-for="ResponsibleParty" class="text-danger"></span>
             </div>
 
             <div class="form-group">
