@@ -13,10 +13,12 @@ namespace Todo.Controllers
     public class TodoItemController : Controller
     {
         private readonly ApplicationDbContext dbContext;
+        private readonly IGravatarService _gravatarService;
 
-        public TodoItemController(ApplicationDbContext dbContext)
+        public TodoItemController(ApplicationDbContext dbContext, IGravatarService gravatarService)
         {
             this.dbContext = dbContext;
+            _gravatarService = gravatarService;
         }
 
         [HttpGet]
@@ -68,6 +70,11 @@ namespace Todo.Controllers
         private RedirectToActionResult RedirectToListDetail(int fieldsTodoListId)
         {
             return RedirectToAction("Detail", "TodoList", new {todoListId = fieldsTodoListId});
+        }
+
+        private async Task<GravatarProfile> GetGravatarProfile(string email)
+        {
+            return await _gravatarService.GetProfileDetailsAsync(email);
         }
     }
 }

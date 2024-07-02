@@ -8,6 +8,7 @@ namespace Todo.Models.TodoLists
         public int TodoListId { get; }
         public string Title { get; }
         public ICollection<TodoItemSummaryViewmodel> Items { get; }
+        public GravatarProfile gravatarProfile { get; }
 
         public TodoListDetailViewmodel(int todoListId, string title, ICollection<TodoItemSummaryViewmodel> items)
         {

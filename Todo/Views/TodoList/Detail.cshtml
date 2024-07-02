@@ -1,6 +1,7 @@
 ﻿@using Todo.Controllers
 @using Todo.Data.Entities
 @using Todo.Services
+@inject IGravatarService _gravatarService
 @model Todo.Models.TodoLists.TodoListDetailViewmodel
 @{
     ViewData["Title"] = $"List: {Model.Title}";
@@ -57,12 +58,29 @@
                             }
                         </a>
                     </div>
+                    @{
+                        var gravatarprofile = await _gravatarService.GetProfileDetailsAsync(item.ResponsibleParty.Email);
+
+                    }
+                    @if(gravatarprofile!=null)
+                    {
+                    <div class="col-md-4 text-right">
+                        <small>
+                            @gravatarprofile.display_name <br />
+                            <img src="https://www.gravatar.com/avatar/@Gravatar.GetHash(item.ResponsibleParty.Email)?s=30" />
+                        </small>
+                    </div>
+                    }
+                    else
+                    {
                     <div class="col-md-4 text-right">
                         <small>
                             @item.ResponsibleParty.UserName
                             <img src="https://www.gravatar.com/avatar/@Gravatar.GetHash(item.ResponsibleParty.Email)?s=30" />
                         </small>
                     </div>
+                    }
+
                 </div>
             </li>
         }
@@ -81,7 +99,14 @@
                     const sortBy = sortOrder.value;
                     const aValue = a.dataset[sortBy];
                     const bValue = b.dataset[sortBy];
-                    return sortBy === 'title' ? aValue.localeCompare(bValue) : parseInt(aValue) - parseInt(bValue);
+
+                    if (sortBy === 'title') {
+                        return aValue.localeCompare(bValue);
+                    } else if (sortBy === 'rank') {
+                        return parseInt(bValue) - parseInt(aValue);
+                    } else {
+                        return parseInt(aValue) - parseInt(bValue);
+                    }
                 });
 
                 todoItems.forEach(item => item.remove());
@@ -96,7 +121,7 @@
 
             hideCompleted.addEventListener('change', updateList);
             sortOrder.addEventListener('change', updateList);
-            
+
             updateList();
         })();
     </script>

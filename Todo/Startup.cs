@@ -8,6 +8,7 @@ using Todo.Data;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using System;
 
 namespace Todo
 {
@@ -28,6 +29,11 @@ namespace Todo
                 // This lambda determines whether user consent for non-essential cookies is needed for a given request.
                 options.CheckConsentNeeded = context => true;
                 options.MinimumSameSitePolicy = SameSiteMode.None;
+            });
+
+            services.AddHttpClient<IGravatarService, GravatarService>(client =>
+            {
+                client.BaseAddress = new Uri(Configuration["GravatarURL"]);
             });
 
             services.AddDbContext<ApplicationDbContext>(options =>
