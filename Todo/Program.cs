@@ -1,10 +1,10 @@
 ﻿using System;
+using System.Linq;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Identity;
-using Todo.Models; // Ensure this namespace includes ApplicationUser
 
 namespace Todo
 {
@@ -30,17 +30,28 @@ namespace Todo
                 {
                     var userManager = services.GetRequiredService<UserManager<IdentityUser>>();
 
-                    var user = new IdentityUser { UserName = "kash.bleem@gmail.com", Email = "kash.bleem@gmail.com" };
-                    var result = userManager.CreateAsync(user, "Password123!").Result;
+                    // Create specific user
+                    var specificUser = new IdentityUser { UserName = "kash.bleem@gmail.com", Email = "kash.bleem@gmail.com" };
+                    var result = userManager.CreateAsync(specificUser, "Password123!").Result;
 
-                    if (result.Succeeded)
-                    {
-                        // Assign roles??
-                    }
-                    else
+                    if (!result.Succeeded)
                     {
                         var logger = services.GetRequiredService<ILogger<Program>>();
-                        logger.LogWarning("User creation failed: {0}", string.Join(", ", result.Errors.ToString()));
+                        logger.LogWarning("User creation failed: {0}", string.Join(", ", result.Errors.Select(e => e.Description)));
+                    }
+
+                    // Create random users
+                    for (int i = 1; i <= 4; i++)
+                    {
+                        var randomUserName = $"randomuser{i}@example.com";
+                        var randomUser = new IdentityUser { UserName = randomUserName, Email = randomUserName };
+                        result = userManager.CreateAsync(randomUser, "RandomPass123!").Result;
+
+                        if (!result.Succeeded)
+                        {
+                            var logger = services.GetRequiredService<ILogger<Program>>();
+                            logger.LogWarning("User creation failed for {0}: {1}", randomUserName, string.Join(", ", result.Errors.Select(e => e.Description)));
+                        }
                     }
                 }
                 catch (Exception ex)
