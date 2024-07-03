@@ -1,7 +1,6 @@
 ﻿using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Todo.Data;
 using Todo.Data.Entities;
 using Todo.EntityModelMappers.TodoItems;
@@ -63,6 +62,7 @@ namespace Todo.Controllers
 
         //full disclosure, if i had time i would MUCH rather stick this in its own Swagger API
         [HttpPost]
+        [AllowAnonymous]
         [Route("api/TodoItem/Create")]
         public async Task<IActionResult> CreateApi([FromBody] CreateTodoItemRequest request)
         {
@@ -96,7 +96,28 @@ namespace Todo.Controllers
             return Ok(viewModel);
         }
 
-        private RedirectToActionResult RedirectToListDetail(int fieldsTodoListId)
+        [HttpPost]
+        [Route("api/TodoItem/SetRank")]
+        public async Task<IActionResult> SetRank([FromBody] SetRankRequest request)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var todoItem = await dbContext.TodoItems.FindAsync(request.TodoItemId);
+            if (todoItem == null)
+            {
+                return NotFound();
+            }
+
+            todoItem.Rank = request.NewRank;
+            await dbContext.SaveChangesAsync();
+
+            return Ok();
+        }
+
+    private RedirectToActionResult RedirectToListDetail(int fieldsTodoListId)
         {
             return RedirectToAction("Detail", "TodoList", new { todoListId = fieldsTodoListId });
         }
@@ -114,4 +135,10 @@ namespace Todo.Controllers
         public int Rank { get; set; }
         public int TodoListId { get; set; }
     }
+    public class SetRankRequest
+    {
+        public int TodoItemId { get; set; }
+        public int NewRank { get; set; }
+    }
+
 }

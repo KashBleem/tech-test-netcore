@@ -5,7 +5,7 @@
 @model Todo.Models.TodoLists.TodoListDetailViewmodel
 @{
     ViewData["Title"] = $"List: {Model.Title}";
-    var sortedItems = Model.Items.OrderBy(item => item.Importance).ToList();
+    var sortedItems = Model.Items.OrderBy(item => item.Rank).ToList();
 }
 <h2>@ViewData["Title"]</h2>
 <div class="col-md-6">
@@ -14,14 +14,6 @@
         <label class="form-check-label" for="hideCompleted">
             Hide completed items
         </label>
-    </div>
-    <div class="form-group mb-3">
-        <label for="sortOrder">Sort by:</label>
-        <select class="form-control" id="sortOrder">
-            <option value="importance">Importance</option>
-            <option value="rank">Rank</option>
-            <option value="title">Title</option>
-        </select>
     </div>
     <h2>CREATE NEW ITEM BELOW</h2>
     <form id="addItemForm" class="mb-3">
@@ -41,6 +33,7 @@
         </div>
         <button type="submit" class="btn btn-primary">Add Item</button>
     </form>
+    <h2>CURRENT ITEMS</h2>
     <ul class="list-group" id="todoItems">
         @foreach (var item in sortedItems)
         {
@@ -57,9 +50,9 @@
                     contextualClass = "";
                     break;
             }
-            <li class="list-group-item @contextualClass" data-rank="@item.Rank" data-title="@item.Title" data-importance="@((int)item.Importance)">
+            <li class="list-group-item @contextualClass" data-id="@item.TodoItemId" data-rank="@item.Rank" data-title="@item.Title" data-importance="@((int)item.Importance)">
                 <div class="row">
-                    <div class="col-md-8">
+                    <div class="col-md-5">
                         <a asp-action="Edit" asp-controller="TodoItem" asp-route-todoItemId="@item.TodoItemId">
                             @if (item.IsDone)
                             {
@@ -71,33 +64,49 @@
                             }
                         </a>
                     </div>
-                    @{
-                        var gravatarprofile = await _gravatarService.GetProfileDetailsAsync(item.ResponsibleParty.Email);
-                    }
-                    @if (gravatarprofile != null)
-                    {
-                        <div class="col-md-4 text-right">
+                    <div class="col-md-3">
+                        <div class="input-group">
+                            <input type="number" class="form-control rank-input" value="@item.Rank" min="1" data-item-id="@item.TodoItemId">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-secondary set-rank-btn" type="button">Set Rank</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-right">
+                        @{
+                            var gravatarprofile = await _gravatarService.GetProfileDetailsAsync(item.ResponsibleParty.Email);
+                        }
+                        @if (gravatarprofile != null)
+                        {
                             <small>
                                 @gravatarprofile.display_name <br />
                                 <img src="https://www.gravatar.com/avatar/@Gravatar.GetHash(item.ResponsibleParty.Email)?s=30" />
                             </small>
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="col-md-4 text-right">
+                        }
+                        else
+                        {
                             <small>
                                 @item.ResponsibleParty.UserName
                                 <img src="https://www.gravatar.com/avatar/@Gravatar.GetHash(item.ResponsibleParty.Email)?s=30" />
                             </small>
-                        </div>
-                    }
+                        }
+                    </div>
                 </div>
             </li>
         }
     </ul>
+    <div class="form-group mb-3">
+        <label for="sortOrder">Sort by:</label>
+        <select class="form-control" id="sortOrder">
+            <option value="importance">Importance</option>
+            <option value="rank">Rank</option>
+            <option value="title">Title</option>
+        </select>
+    </div>
 </div>
+
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js"></script>
     <script>
         (function () {
             const hideCompleted = document.getElementById('hideCompleted');
@@ -117,7 +126,7 @@
                     } else if (sortBy === 'rank') {
                         return parseInt(bValue) - parseInt(aValue);
                     } else {
-                        return parseInt(aValue) - parseInt(bValue);
+                        return parseInt(bValue) - parseInt(aValue);
                     }
                 });
 
@@ -148,7 +157,7 @@
                     body: JSON.stringify({
                         title: title,
                         importance: parseInt(importance),
-                        rank: rank,
+                        rank: parseInt(rank),
                         todoListId: @Model.TodoListId
                             }),
                 });
@@ -168,16 +177,25 @@
             function createListItem(item) {
                 const li = document.createElement('li');
                 li.className = `list-group-item ${getContextualClass(item.importance)}`;
-                li.dataset.Rank = item.Rank;
+                li.dataset.id = item.todoItemId;
+                li.dataset.rank = item.rank;
                 li.dataset.title = item.title;
                 li.dataset.importance = item.importance;
 
                 const content = `
                             <div class="row">
-                                <div class="col-md-8">
+                                <div class="col-md-5">
                                     <a href="/TodoItem/Edit/${item.todoItemId}">
                                         ${item.title}
                                     </a>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="input-group">
+                                        <input type="number" class="form-control rank-input" value="${item.rank}" min="1" data-item-id="${item.todoItemId}">
+                                        <div class="input-group-append">
+                                            <button class="btn btn-outline-secondary set-rank-btn" type="button">Set Rank</button>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="col-md-4 text-right">
                                     <small>
@@ -199,6 +217,77 @@
                     default: return '';
                 }
             }
+
+            async function updateRanks(movedItem, newIndex) {
+                const items = Array.from(todoItemsList.children);
+                const movedItemId = parseInt(movedItem.dataset.id);
+                const newRank = items.length - newIndex;
+
+                try {
+                    const response = await fetch('/api/TodoItem/SetRank', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            todoItemId: movedItemId,
+                            newRank: newRank
+                        }),
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Failed to update rank');
+                    }
+
+                    items.forEach((item, index) => {
+                        const rank = items.length - index;
+                        item.dataset.rank = rank;
+                        item.querySelector('.rank-input').value = rank;
+                    });
+
+                    if (sortOrder.value === 'rank') {
+                        updateList();
+                    }
+
+                    todoItems = items;
+                } catch (error) {
+                    console.error('Error updating rank:', error);
+                    updateList();
+                }
+            }
+
+            // Add event listener for set rank buttons
+            todoItemsList.addEventListener('click', async (e) => {
+                if (e.target.classList.contains('set-rank-btn')) {
+                    const listItem = e.target.closest('.list-group-item');
+                    const itemId = listItem.dataset.id;
+                    const rankInput = listItem.querySelector('.rank-input');
+                    const newRank = rankInput.value;
+
+                    try {
+                        const response = await fetch('/api/TodoItem/SetRank', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                todoItemId: parseInt(itemId),
+                                newRank: parseInt(newRank)
+                            }),
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('Failed to update rank');
+                        }
+
+                        listItem.dataset.rank = newRank;
+                        updateList();
+                    } catch (error) {
+                        console.error('Error updating rank:', error);
+                        alert('Failed to update rank. Please try again.');
+                    }
+                }
+            });
 
             updateList();
         })();

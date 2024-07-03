@@ -20,6 +20,33 @@ The app runs on Windows, macOS, and Linux. It can be built using Visual Studio, 
 
 If you run the tests, you should see that one fails. This is deliberate.
 
+## SQLite Setup
+
+This project uses SQLite for its database. Follow these instructions to set up and configure SQLite:
+
+1. Ensure you have the necessary tools installed:
+    - [.NET 8.0 SDK](https://dotnet.microsoft.com/download)
+    - [SQLite](https://www.sqlite.org/download.html)
+
+2. Configure the SQLite database:
+    - Open a terminal or command prompt in the root of the project directory.
+    - Run the following command to apply the latest Entity Framework migrations and create the database:
+      ```bash
+      dotnet ef database update
+      ```
+
+3. Verify that the SQLite database has been created:
+    - You should see a new file named `Todo.db` in the project directory. This file represents your SQLite database.
+
+4. Running the application:
+    - Use the following command to run the application:
+      ```bash
+      dotnet run --project Todo
+      ```
+
+5. (Optional) Explore the database:
+    - You can use tools like [DB Browser for SQLite](https://sqlitebrowser.org/) to open and inspect the `Todo.db` file.
+
 ## The app
 
 The app allows a user to create multiple todo-lists. Each list has a number of items. Each item has an importance and a person responsible for completion.
