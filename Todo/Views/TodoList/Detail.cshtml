@@ -22,13 +22,13 @@
         </div>
         <div class="form-group">
             <select class="form-control" id="newItemImportance">
-                <option value="0">Low</option>
+                <option value="0">High</option>
                 <option value="1">Medium</option>
-                <option value="2">High</option>
+                <option value="2">Low</option>
             </select>
         </div>
         <div class="form-group">
-            <label for="newItemRank">Rank:</label>
+            <label for="newItemRank"></label>
             <input type="number" class="form-control" id="newItemRank" placeholder="Rank" required min="1">
         </div>
         <button type="submit" class="btn btn-primary">Add Item</button>
@@ -125,6 +125,8 @@
                         return aValue.localeCompare(bValue);
                     } else if (sortBy === 'rank') {
                         return parseInt(bValue) - parseInt(aValue);
+                    } else if (sortBy === 'importance') {
+                        return parseInt(aValue) - parseInt(bValue);
                     } else {
                         return parseInt(bValue) - parseInt(aValue);
                     }
@@ -212,8 +214,8 @@
 
             function getContextualClass(importance) {
                 switch (parseInt(importance)) {
-                    case 2: return 'list-group-item-danger';
-                    case 0: return 'list-group-item-info';
+                    case 0: return 'list-group-item-danger';
+                    case 2: return 'list-group-item-info';
                     default: return '';
                 }
             }
